@@ -1,0 +1,220 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Inter", sans-serif !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.sidebar-collapse-item > h2 > button {
+  padding: 0 !important;
+}
+
+.logo-box {
+  width: 8rem;
+}
+
+.nextui-c-ftJsHY {
+  width: 100% !important;
+}
+
+.size-xs {
+  width: 20px;
+}
+
+.size-sm {
+  width: 28px;
+}
+
+.size-md {
+  width: 32px;
+}
+
+.size-lg {
+  width: 36px;
+}
+
+.size-xl {
+  width: 40px;
+}
+
+.loader {
+  overflow: visible;
+  transform: rotate(-90deg);
+  transform-origin: center;
+
+  --active: #006eee;
+  --track: #fff;
+
+  --duration: 8s;
+
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    rotate: 0deg;
+  }
+
+  100% {
+    rotate: 360deg;
+  }
+}
+
+.active {
+  stroke: var(--active);
+  strokelinecap: round;
+  stroke-dashoffset: 360;
+  animation: active-animation var(--duration) ease-in-out infinite;
+}
+
+@keyframes active-animation {
+  0% {
+    stroke-dasharray: 0 0 0 360 0 360;
+  }
+  12.5% {
+    stroke-dasharray: 0 0 270 90 270 90;
+  }
+  25% {
+    stroke-dasharray: 0 270 0 360 0 360;
+  }
+  37.5% {
+    stroke-dasharray: 0 270 270 90 270 90;
+  }
+  50% {
+    stroke-dasharray: 0 540 0 360 0 360;
+  }
+  50.001% {
+    stroke-dasharray: 0 180 0 360 0 360;
+  }
+  62.5% {
+    stroke-dasharray: 0 180 270 90 270 90;
+  }
+  75% {
+    stroke-dasharray: 0 450 0 360 0 360;
+  }
+  87.5% {
+    stroke-dasharray: 0 450 270 90 270 90;
+  }
+  87.501% {
+    stroke-dasharray: 0 90 270 90 270 90;
+  }
+  100% {
+    stroke-dasharray: 0 360 1 360 0 360;
+  }
+}
+
+.track {
+  stroke: var(--track);
+  strokelinecap: round;
+  stroke-dashoffset: 360;
+  animation: track-animation var(--duration) ease-in-out infinite;
+}
+
+@keyframes track-animation {
+  0% {
+    stroke-dasharray: 0 20 320 40 320 40;
+  }
+  12.5% {
+    stroke-dasharray: 0 290 50 310 50 310;
+  }
+  25% {
+    stroke-dasharray: 0 290 320 40 320 40;
+  }
+  37.5% {
+    stroke-dasharray: 0 560 50 310 50 310;
+  }
+  37.501% {
+    stroke-dasharray: 0 200 50 310 50 310;
+  }
+  50% {
+    stroke-dasharray: 0 200 320 40 320 40;
+  }
+  62.5% {
+    stroke-dasharray: 0 470 50 310 50 310;
+  }
+  62.501% {
+    stroke-dasharray: 0 110 50 310 50 310;
+  }
+  75% {
+    stroke-dasharray: 0 110 320 40 320 40;
+  }
+  87.5% {
+    stroke-dasharray: 0 380 50 310 50 310;
+  }
+  100% {
+    stroke-dasharray: 0 380 320 40 320 40;
+  }
+}
+
+.card .chart-area {
+  position: relative;
+}
+
+.apexcharts-menu {
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: #000 !important;
+}
+
+.apexcharts-menu-item {
+  color: #fff !important;
+}
+
+.card .chart-area .grid {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  height: 80%;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0% 3%,
+    #f9f9f9 3% 3.5%,
+    transparent 3% 18.65%
+  );
+}
+
+.card .chart-area .grid::after {
+  content: "";
+  position: inherit;
+  z-index: -1;
+  top: inherit;
+  bottom: inherit;
+  width: inherit;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(27, 27, 27, 1),
+    rgba(27, 27, 27, 0.9),
+    rgba(27, 27, 27, 1)
+  );
+}
+
+body .apexcharts-tooltip.apexcharts-theme-light,
+.apexcharts-xaxistooltip {
+  color: var(--color-text);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  box-shadow: none;
+  padding: 8px 6px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: 0;
+}
+
+.apexcharts-tooltip-title,
+.apexcharts-zaxistooltip-bottom.apexcharts-theme-light {
+  display: none;
+}
