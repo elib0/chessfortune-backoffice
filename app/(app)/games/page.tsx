@@ -2,10 +2,8 @@
 
 import { GameIcon } from "@/components/icons/sidebar";
 import AppContainer from "@/components/shared/app-container";
-import { TableWrapper } from "@/components/table";
-import { roomColumns } from "@/components/table/columns";
 import { useFetchRooms } from "@/hooks";
-import React from "react";
+import { GameTable } from "@/components/table/game/game-table";
 
 const Page = () => {
   const { rooms, loading } = useFetchRooms();
@@ -20,13 +18,7 @@ const Page = () => {
         },
       ]}
     >
-      <TableWrapper
-        title="Games"
-        isLoading={loading}
-        data={rooms}
-        columns={roomColumns}
-        cell={"rooms"}
-      />
+      <GameTable isLoading={loading} data={rooms} />
     </AppContainer>
   );
 };

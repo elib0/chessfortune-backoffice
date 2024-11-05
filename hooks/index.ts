@@ -10,6 +10,10 @@ export { default as useFetchRoomsReports } from "./rooms/useFetchRoomReports";
 // Users hooks
 export { default as useFetchUsers } from "./users/useFetchUsers";
 export { default as useFetchUserById } from "./users/useFetchUserById";
+export { default as useGenerateUserPin } from "./users/useGenerateUserPin";
+export { default as useFetchUserByEmail } from "./users/useFetchUserByEmail";
+export { default as useFetchPermissions } from "./users/useFetchPermissions";
+export { default as useFetchPermissionsById } from "./users/useFetchPermissionsById";
 
 // Activity hooks
 export { default as useAddActivity } from "./activity/useAddActivity";
@@ -20,3 +24,9 @@ export { default as useFirebaseQrAuthenticator } from "./firebase/useFirebaseQrA
 
 // Reports Hooks
 export { default as useFetchReports } from "./reports/useFetchReports";
+
+// Role Hooks
+export { default as useFetchRoles } from "./role/useFetchRoles";
+
+// Referrals Hooks
+export { default as useFetchReferrals } from "./referrals/useFetchReferrals";

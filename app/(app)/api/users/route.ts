@@ -1,16 +1,21 @@
 import { revalidatePath } from "next/cache";
-import { firestore } from "../../../../firebase/server";
+import { adminAuth, firestore } from "../../../../firebase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(_: NextRequest) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const profilesCollection = firestore.collection("profiles");
-    const querySnapshot = await profilesCollection.get();
+    const querySnapshot = await profilesCollection
+      .orderBy("createdAt", "desc")
+      .get();
 
     const profiles = querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -37,14 +42,18 @@ export async function POST(req: NextRequest) {
   }
 
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const {
       displayName,
       email,
+      password,
       photoURL,
       online,
       config: {
@@ -56,27 +65,40 @@ export async function POST(req: NextRequest) {
       seeds,
     } = await req.json();
 
-    if (!displayName || !email || !set) {
+    if (!displayName?.trim() || !email?.trim() || !password?.trim() || !set) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { message: "Missing required fields" },
         { status: 400 }
+      );
+    }
+
+    const profilesCollection = firestore.collection("profiles");
+
+    const emailExistsSnapshot = await profilesCollection
+      .where("email", "==", email.trim())
+      .get();
+
+    if (!emailExistsSnapshot.empty) {
+      return NextResponse.json(
+        { message: "Email already exists" },
+        { status: 409 }
       );
     }
 
     const updateProfile = {
       config: {
         boardTheme: {
-          set,
+          set: set || "cburnett",
           theme: theme || 0,
         },
         chat,
         sound,
       },
-      displayName,
+      displayName: displayName.trim(),
+      email: email.trim(),
       elo: 0,
-      email,
       online,
-      photoURL,
+      photoURL: photoURL.trim() || "",
       referred: "",
       seeds: seeds || 0,
       statistics: {
@@ -86,7 +108,12 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     };
 
-    await firestore.collection("profiles").add(updateProfile);
+    const authUser = await adminAuth.createUser({
+      email,
+      password,
+    });
+
+    await profilesCollection.doc(authUser.uid).set(updateProfile);
 
     revalidatePath(req.url);
 

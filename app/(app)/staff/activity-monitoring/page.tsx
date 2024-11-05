@@ -33,7 +33,7 @@ const Page = () => {
 
   useEffect(() => {
     if (selectedMonth === "All") {
-      const data = activities.map((activity) => {
+      const data = activities?.map((activity) => {
         return {
           ...activity,
           createdAt: convertFirestoreTimestampToDate(
@@ -45,7 +45,7 @@ const Page = () => {
       setFilteredActivities(data);
     } else {
       const data = activities
-        .filter((activity) => {
+        ?.filter((activity) => {
           const date = convertFirestoreTimestampToDate(activity.createdAt);
           return (
             new Date(date).toLocaleString("en-US", {
@@ -65,6 +65,17 @@ const Page = () => {
       setFilteredActivities(data);
     }
   }, [selectedMonth, activities]);
+
+  if (!activityLoading && !userLoading && !activities?.length && !user)
+    return (
+      <div className="text-center mt-40">
+        <h4 className="text-xl font-semibold">No Staffs Activity Available</h4>
+        <p className="text-gray-500 mt-2">
+          We couldn’t find any staffs activity. Please check back later or
+          contact support if you think this is an error.
+        </p>
+      </div>
+    );
 
   return (
     <AppContainer

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  { params: { id } }: { params: { id: string } }
+  { params: { id: email } }: { params: { id: string } }
 ) {
   if (req.method !== "PUT") {
     return NextResponse.json(
@@ -20,7 +20,26 @@ export async function PUT(
       pin: Math.floor(100000 + Math.random() * 900000).toString(),
     };
 
-    await firestore.collection("profiles").doc(id).update(updateProfile);
+    const profilesSnapshot = await firestore
+      .collection("profiles")
+      .where("email", "==", email)
+      .get();
+
+    if (profilesSnapshot.empty) {
+      return NextResponse.json(
+        { error: "No profile found with the provided email" },
+        { status: 404 }
+      );
+    }
+
+    const batch = firestore.batch();
+
+    profilesSnapshot.forEach((doc) => {
+      const docRef = firestore.collection("profiles").doc(doc.id);
+      batch.update(docRef, updateProfile);
+    });
+
+    await batch.commit();
 
     revalidatePath(req.url);
 

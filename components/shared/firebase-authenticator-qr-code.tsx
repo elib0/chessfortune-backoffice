@@ -15,8 +15,6 @@ const FirebaseAuthenticatorQRCode = () => {
   const { qrUri } = useFirebaseQrAuthenticator();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  console.log(qrUri);
-
   return (
     <>
       <Button isIconOnly size="sm" onPress={onOpen}>

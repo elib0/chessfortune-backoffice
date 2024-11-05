@@ -10,6 +10,8 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import React, { FC, useState } from "react";
 import ImagePicker from "../shared/image-picker";
@@ -20,10 +22,14 @@ import { v4 as uuidv4 } from "uuid";
 import { clientStorageRef } from "@/firebase/client";
 import { getDownloadURL, uploadBytes } from "firebase/storage";
 import { useAddActivity } from "@/hooks";
+import { boardThemeSetOptions } from "@/helpers/data";
+import { LockIcon, EyeSlashIcon } from "../icons/auth";
+import { EyeIcon } from "../icons/table/eye-icon";
 
 export interface UserFormData {
   displayName: string;
   email: string;
+  password: string;
   online: boolean;
   photoURL: File | null;
   config: {
@@ -41,14 +47,15 @@ export interface UserFormData {
   seeds: number;
 }
 
-const formState = {
+const formState: UserFormData = {
   displayName: "",
   email: "",
+  password: "",
   online: false,
   photoURL: null,
   config: {
     boardTheme: {
-      set: "",
+      set: "cburnett",
       theme: 0,
     },
     chat: false,
@@ -63,11 +70,12 @@ const formState = {
 
 const AddUser: FC = () => {
   const { addActivity } = useAddActivity();
+  const [visible, setVisible] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
   const [formData, setFormData] = useState<UserFormData>(formState);
-  const [visible, setVisible] = useState<boolean>(false);
 
-  const updateImage = async () => {
+  const addImage = async () => {
     const { name } = formData.photoURL as File;
     const imageRef = clientStorageRef(`/profile/${name + uuidv4()}`);
     await uploadBytes(imageRef, formData.photoURL as File);
@@ -75,35 +83,48 @@ const AddUser: FC = () => {
     return image;
   };
 
+  const toggleVisibility = () => setIsVisible(!isVisible);
+
   const addUser = async () => {
     try {
       setUploading(true);
 
-      if (!formData.displayName || !formData.email) {
-        throw new Error("Please fill in all required top-level fields.");
+      const {
+        displayName,
+        email,
+        password,
+        config: {
+          boardTheme: { set },
+        },
+      } = formData;
+
+      if (!displayName || !email || !password) {
+        throw new Error("Please fill in all required fields.");
       }
 
-      if (!formData.config.boardTheme.set) {
-        throw new Error("Please complete the board theme configuration.");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(email)) {
+        throw new Error("Please enter a valid email address.");
       }
 
-      if (!formData.photoURL) {
-        throw new Error("Please upload a photo.");
+      if (password.length < 6) {
+        throw new Error("Password must me 6 digits long.");
       }
 
-      if (!(formData.photoURL instanceof File)) {
-        throw new Error("Invalid photo file.");
+      if (!set) {
+        throw new Error("Please select a board theme.");
       }
 
       const {
         data: { message },
       } = await axios.post("/api/users", {
         ...formData,
-        photoURL: await updateImage(),
+        photoURL: formData.photoURL ? await addImage() : "",
       });
 
       addActivity({
-        action: `Added user with email: ${formData.email}`,
+        action: `Added user with email: ${email}`,
       });
 
       toast.success(message);
@@ -113,7 +134,11 @@ const AddUser: FC = () => {
       setFormData(formState);
     } catch (error: any) {
       setUploading(false);
-      toast.error(error.message);
+      toast.error(
+        error?.response?.data?.message
+          ? error?.response?.data?.message
+          : error.message
+      );
     }
   };
 
@@ -203,6 +228,44 @@ const AddUser: FC = () => {
               </div>
               <div className="flex flex-wrap gap-4 lg:flex-nowrap">
                 <Input
+                  label="Email"
+                  name="email"
+                  isClearable
+                  fullWidth
+                  size="lg"
+                  placeholder="Enter Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+
+                <Input
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  onChange={handleChange}
+                  value={formData.password}
+                  placeholder="Enter your password"
+                  type={isVisible ? "text" : "password"}
+                  startContent={<LockIcon fill="#d0d1d0" />}
+                  endContent={
+                    <button
+                      className="focus:outline-none"
+                      type="button"
+                      onClick={toggleVisibility}
+                      aria-label="toggle password visibility"
+                    >
+                      {isVisible ? (
+                        <EyeSlashIcon fill="#d0d1d0" />
+                      ) : (
+                        <EyeIcon fill="#d0d1d0" size={16} />
+                      )}
+                    </button>
+                  }
+                />
+              </div>
+
+              <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
+                <Input
                   label="Name"
                   name="displayName"
                   isClearable
@@ -213,27 +276,12 @@ const AddUser: FC = () => {
                   onChange={handleChange}
                 />
 
-                <Input
-                  label="Email"
-                  name="email"
-                  isClearable
-                  fullWidth
+                <Select
                   size="lg"
-                  placeholder="Enter Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
-                <Input
+                  className="w-full"
                   label="Board Theme Set"
-                  name="set"
-                  isClearable
-                  fullWidth
-                  size="lg"
-                  placeholder="Enter Board Theme Set"
-                  value={formData.config.boardTheme.set}
+                  placeholder="Select Board Theme Set"
+                  selectedKeys={[formData.config.boardTheme.set]}
                   onChange={({ target: { value } }: any) =>
                     setFormData((prevValue) => {
                       return {
@@ -248,7 +296,14 @@ const AddUser: FC = () => {
                       };
                     })
                   }
-                />
+                >
+                  {boardThemeSetOptions.map((item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
                 <Input
                   label="Board Theme"
                   name="theme"
@@ -272,62 +327,6 @@ const AddUser: FC = () => {
                       };
                     })
                   }
-                />
-              </div>
-
-              <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
-                <Input
-                  label="Statistics Win"
-                  name="win"
-                  isClearable
-                  fullWidth
-                  size="lg"
-                  type="number"
-                  placeholder="Enter Wins"
-                  value={`${formData.statistics.win}`}
-                  onChange={({ target: { value } }: any) =>
-                    setFormData((prevValue) => {
-                      return {
-                        ...prevValue,
-                        statistics: {
-                          ...prevValue.statistics,
-                          win: value,
-                        },
-                      };
-                    })
-                  }
-                />
-                <Input
-                  label="Statistics Loses"
-                  name="loses"
-                  isClearable
-                  fullWidth
-                  size="lg"
-                  type="number"
-                  placeholder="Enter Loses"
-                  value={`${formData.statistics.loses}`}
-                  onChange={({ target: { value } }: any) =>
-                    setFormData((prevValue) => {
-                      return {
-                        ...prevValue,
-                        statistics: {
-                          ...prevValue.statistics,
-                          loses: value,
-                        },
-                      };
-                    })
-                  }
-                />
-                <Input
-                  label="Seeds"
-                  name="seeds"
-                  isClearable
-                  fullWidth
-                  size="lg"
-                  type="number"
-                  placeholder="Enter Seeds"
-                  value={`${formData.seeds}`}
-                  onChange={handleChange}
                 />
               </div>
             </div>

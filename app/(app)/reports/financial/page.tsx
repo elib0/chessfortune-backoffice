@@ -3,35 +3,13 @@
 import React from "react";
 import AppContainer from "@/components/shared/app-container";
 import { ReportsIcon } from "@/components/icons/sidebar";
-import { TableWrapper } from "@/components/table";
-import { reportsColumns } from "@/components/table/columns";
-import { useFetchReports } from "@/hooks";
-import { convertFirestoreTimestampToDate } from "@/helpers";
+import { useFetchReports, useFetchUsers } from "@/hooks";
 import AddReport from "@/components/reports/add-report";
+import { FinancialReportTable } from "@/components/table/reports/financial-report-table";
 
 const Page = () => {
   const { reports, loading } = useFetchReports();
-
-  const csvData = [
-    [
-      "Report Id",
-      "User Id",
-      "Amount",
-      "Type",
-      "Category",
-      "Description",
-      "Created At",
-    ],
-    ...reports.map(
-      ({ id, userId, amount, type, category, description, createdAt }) => {
-        const date = convertFirestoreTimestampToDate(
-          createdAt as any
-        ).toISOString();
-
-        return [id, userId, amount, type, category, description, date];
-      }
-    ),
-  ];
+  const { users, loading: usersLoading } = useFetchUsers();
 
   return (
     <AppContainer
@@ -49,17 +27,17 @@ const Page = () => {
       ]}
       button={<AddReport />}
     >
-      <TableWrapper
-        isLoading={loading}
-        data={reports}
-        columns={reportsColumns}
-        cell={"reports"}
-        title="Financial Reports"
-        showExportIcon
-        csvData={{
-          fileName: "financial-reports.csv",
-          data: csvData,
-        }}
+      <FinancialReportTable
+        isLoading={loading || usersLoading}
+        data={reports?.map((item) => {
+          const user = users.find((user) => user.id === item.userId);
+
+          return {
+            ...item,
+            name: user?.displayName,
+            email: user?.email,
+          };
+        })}
       />
     </AppContainer>
   );

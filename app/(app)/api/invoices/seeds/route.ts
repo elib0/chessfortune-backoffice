@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { firestore } from "@/firebase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { InvoiceData } from "@/types";
 
 export async function PUT(req: NextRequest) {
   if (req.method !== "PUT") {
@@ -13,9 +14,9 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { ids, seedAmount } = await req.json();
+    const { ids, seedAmount: amount } = await req.json();
 
-    if (!seedAmount || ids.length === 0) {
+    if (!amount || ids.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -26,10 +27,15 @@ export async function PUT(req: NextRequest) {
 
     ids.forEach((id: string) => {
       const docRef = firestore.collection("invoices").doc(id);
-      batch.update(docRef, { seedAmount });
-    });
 
-    await batch.commit();
+      docRef.get().then(async (docSnapshot) => {
+        const { seedAmount } = docSnapshot.data() as InvoiceData;
+
+        const newSeedAmount = (Number(seedAmount) || 0) + Number(amount);
+        batch.update(docRef, { seedAmount: newSeedAmount });
+        await batch.commit();
+      });
+    });
 
     revalidatePath(req.url);
 

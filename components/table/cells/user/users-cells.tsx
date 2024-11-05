@@ -8,18 +8,6 @@ import { UpdateUser } from "@/components/users";
 const UserRenderCells = ({ user, columnKey }: Props) => {
   const cellValue = user[columnKey as keyof ProfileData];
 
-  //   const updateProfileStatus = async (id: string, status: boolean) => {
-  //     try {
-  //       await updateDoc(doc(db, "profiles", id), {
-  //         online: status,
-  //       });
-
-  //       toast.success(`The Status is now ${status ? "Online" : "Offline"}`);
-  //     } catch (error) {
-  //       console.error("Error updating profile Status: ", error);
-  //     }
-  //   };
-
   switch (columnKey) {
     case "displayName":
       return (
@@ -62,7 +50,10 @@ const UserRenderCells = ({ user, columnKey }: Props) => {
     case "actions":
       return (
         <ActionCells
+          data={user}
+          title={"user"}
           onViewHref={`/users/${user.id}`}
+          deleteApi={`/api/users/${user.id}`}
           onEdit={<UpdateUser user={user} id={user.id} />}
         />
       );

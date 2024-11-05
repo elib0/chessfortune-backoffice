@@ -25,6 +25,26 @@ const cardStyle =
 const Page = () => {
   const { invoices, loading } = useFetchInvoices();
 
+  if (loading)
+    return (
+      <div className="flex justify-center items-center mt-40">
+        <Loader size="lg" />
+      </div>
+    );
+
+  if (!loading && !invoices?.length)
+    return (
+      <div className="text-center mt-40">
+        <h4 className="text-xl font-semibold capitalize">{`No Balances and Movements Available`}</h4>
+        <p className="text-gray-500 mt-2">
+          {`
+          We couldn’t find any Balances and Movements data. Please check back later or contact support
+          if you think this is an error.
+          `}
+        </p>
+      </div>
+    );
+
   const getPayments = (type: paymentType) =>
     invoices?.length > 0
       ? invoices.filter(
@@ -101,85 +121,79 @@ const Page = () => {
         },
       ]}
     >
-      {loading ? (
-        <div className="flex justify-center items-center mt-40">
-          <Loader size="lg" />
-        </div>
-      ) : (
-        <div className="w-full">
-          <div className="grid md:grid-cols-2 grid-cols-1 2xl:grid-cols-3 gap-6 justify-center w-full">
-            <div className={`${cardStyle} bg-primary`}>
-              <CreditCardIcon height={100} width={100} />
-              <Divider
-                orientation="vertical"
-                className="bg-default-foreground w-1.5 rounded"
-              />
-              <div className="flex flex-col text-start gap-2.5">
-                <h2 className="text-2xl font-bold">Payments</h2>
-                <h3 className="text-xl font-semibold">{`Transaction: ${getLength(
-                  "pay"
-                )}`}</h3>
-                <h3 className="text-lg font-semibold">{`Amount: $${getAmount(
-                  "pay"
-                )}`}</h3>
-              </div>
-            </div>
-            <div className={`${cardStyle} bg-warning`}>
-              <ArrowUpIcon height={100} width={100} />
-              <Divider
-                orientation="vertical"
-                className="bg-default-foreground w-1.5 rounded"
-              />
-              <div className="flex flex-col text-start gap-2.5">
-                <h2 className="text-2xl font-bold">Withdraws</h2>
-                <h3 className="text-xl font-semibold">{`Transaction: ${getLength(
-                  "withdraw"
-                )}`}</h3>
-                <h3 className="text-lg font-semibold">{`Amount: $${getAmount(
-                  "withdraw"
-                )}`}</h3>
-              </div>
-            </div>
-            <div className={`${cardStyle} bg-secondary`}>
-              <BuildingIcon height={100} width={100} />
-              <Divider
-                orientation="vertical"
-                className="bg-default-foreground w-1.5 rounded"
-              />
-              <div className="flex flex-col text-start gap-2.5">
-                <h2 className="text-2xl font-bold">Current Balance</h2>
-                <h3 className="text-xl font-semibold">{`Transaction: ${
-                  getLength("pay") + getLength("withdraw")
-                }`}</h3>
-                <h3 className="text-lg font-semibold">{`Amount: $${
-                  getAmount("pay") - getAmount("withdraw")
-                }`}</h3>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 rounded-xl shadow my-6 bg-content1 w-full">
-            <ApexCharts
-              options={chartOptions}
-              series={chartOptions.series}
-              type="line"
-              height={300}
+      <div className="w-full">
+        <div className="grid md:grid-cols-2 grid-cols-1 2xl:grid-cols-3 gap-6 justify-center w-full">
+          <div className={`${cardStyle} bg-primary`}>
+            <CreditCardIcon height={100} width={100} />
+            <Divider
+              orientation="vertical"
+              className="bg-default-foreground w-1.5 rounded"
             />
+            <div className="flex flex-col text-start gap-2.5">
+              <h2 className="text-2xl font-bold">Payments</h2>
+              <h3 className="text-xl font-semibold">{`Transaction: ${getLength(
+                "pay"
+              )}`}</h3>
+              <h3 className="text-lg font-semibold">{`Amount: $${getAmount(
+                "pay"
+              )}`}</h3>
+            </div>
           </div>
-          <TableWrapper
-            isLoading={loading}
-            data={getPayments("pay")}
-            columns={invoiceColumns}
-            cell={"invoices"}
-            title="Balance and Movements"
-            showDateFilter={true}
-            showExportIcon={true}
-            csvData={{
-              fileName: "balance-and-movements.csv",
-              data: getPayments("pay"),
-            }}
+          <div className={`${cardStyle} bg-warning`}>
+            <ArrowUpIcon height={100} width={100} />
+            <Divider
+              orientation="vertical"
+              className="bg-default-foreground w-1.5 rounded"
+            />
+            <div className="flex flex-col text-start gap-2.5">
+              <h2 className="text-2xl font-bold">Withdraws</h2>
+              <h3 className="text-xl font-semibold">{`Transaction: ${getLength(
+                "withdraw"
+              )}`}</h3>
+              <h3 className="text-lg font-semibold">{`Amount: $${getAmount(
+                "withdraw"
+              )}`}</h3>
+            </div>
+          </div>
+          <div className={`${cardStyle} bg-secondary`}>
+            <BuildingIcon height={100} width={100} />
+            <Divider
+              orientation="vertical"
+              className="bg-default-foreground w-1.5 rounded"
+            />
+            <div className="flex flex-col text-start gap-2.5">
+              <h2 className="text-2xl font-bold">Current Balance</h2>
+              <h3 className="text-xl font-semibold">{`Transaction: ${
+                getLength("pay") + getLength("withdraw")
+              }`}</h3>
+              <h3 className="text-lg font-semibold">{`Amount: $${
+                getAmount("pay") - getAmount("withdraw")
+              }`}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 rounded-xl shadow my-6 bg-content1 w-full">
+          <ApexCharts
+            options={chartOptions}
+            series={chartOptions.series}
+            type="line"
+            height={300}
           />
         </div>
-      )}
+        <TableWrapper
+          isLoading={loading}
+          data={getPayments("pay")}
+          columns={invoiceColumns}
+          cell={"invoices"}
+          title="Balance and Movements"
+          showDateFilter={true}
+          showExportIcon={true}
+          csvData={{
+            fileName: "balance-and-movements.csv",
+            data: getPayments("pay"),
+          }}
+        />
+      </div>
     </AppContainer>
   );
 };

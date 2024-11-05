@@ -37,7 +37,7 @@ const InvoiceRenderCells: FC<{ invoice: any; columnKey: any }> = ({
               ? "success"
               : invoice.status === "new"
               ? "primary"
-              : invoice.status === "process"
+              : invoice.status === "processing"
               ? "warning"
               : invoice.status === "expired"
               ? "danger"
@@ -50,7 +50,7 @@ const InvoiceRenderCells: FC<{ invoice: any; columnKey: any }> = ({
       );
 
     case "actions":
-      return <ActionCells onViewHref={`/users/${invoice.id}`} />;
+      return <ActionCells data={invoice} onViewHref={`/users/${invoice.id}`} />;
 
     default:
       return <TooltipWrapper value={cellValue} />;

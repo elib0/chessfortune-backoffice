@@ -1,5 +1,5 @@
 import Script from "next/script";
-import React from "react";
+import React, { FC } from "react";
 import {
   Dropdown,
   DropdownItem,
@@ -27,7 +27,7 @@ function googleTranslateElementInit() {
   );
 }
 
-const LanguageTranslator = () => {
+const LanguageTranslator: FC<{ className?: string }> = ({ className }) => {
   const [lang, setLang] = React.useState(getLanguageCookie());
   const [isWidgetReady, setIsWidgetReady] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -66,9 +66,9 @@ const LanguageTranslator = () => {
   };
 
   return (
-    <div className="absolute z-20 top-6 right-6">
+    <div className={className}>
       <div id="google_translate_element" className="hidden" />
-      <Dropdown>
+      <Dropdown placement="left">
         <DropdownTrigger>
           <span
             style={{

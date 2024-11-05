@@ -4,13 +4,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(_: NextRequest) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const reportsCollection = firestore.collection("reports");
-    const querySnapshot = await reportsCollection.get();
+    const querySnapshot = await reportsCollection
+      .orderBy("createdAt", "desc")
+      .get();
 
     const reports = querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -37,9 +42,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { amount, category, description, userId } = await req.json();
+    const { type, amount, category, description, userId } = await req.json();
 
-    if (!amount || !category || !description || !userId) {
+    if (!amount || !category || !description || !userId || !type) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -47,8 +52,8 @@ export async function POST(req: NextRequest) {
     }
 
     const createReport = {
-      type: "income/expense",
-      amount,
+      type,
+      amount: Number(amount),
       category,
       description,
       userId,

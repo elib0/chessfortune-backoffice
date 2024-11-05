@@ -1,12 +1,35 @@
 import { RoomData } from "@/types";
-import { Tooltip } from "@nextui-org/react";
+import { Chip, Tooltip } from "@nextui-org/react";
 import { FC } from "react";
 import { Props } from "react-apexcharts";
 import CreatedAtCell from "../created-at-cell";
 import ActionCells from "../actions-cell";
 
-const UserInfo = ({ user, room }: { user: "w" | "b"; room: any }) => {
-  const { displayName, email } = room.players[room.createdBy].profile;
+const UserInfo = ({ room }: { room: any }) => {
+  const player = room?.players?.[room.createdBy];
+
+  if (!player || !player.profile) {
+    return <div>No user information available</div>;
+  }
+
+  const { displayName, email } = player.profile;
+
+  return (
+    <div className="w-full flex flex-col">
+      <h2 className="capitalize">{displayName}</h2>
+      <h3 className="capitalize">{email}</h3>
+    </div>
+  );
+};
+
+const WinnerInfo = ({ room }: { room: any }) => {
+  const player = room?.players?.[room.winner];
+
+  if (!player || !player.profile) {
+    return <div>No user information available</div>;
+  }
+
+  const { displayName, email } = player.profile;
 
   return (
     <div className="w-full flex flex-col">
@@ -40,11 +63,20 @@ export const RoomRenderCells = ({ room, columnKey }: Props) => {
       return <span>{cellValue} mins</span>;
 
     case "createdBy":
+      return <UserInfo room={room} />;
+
     case "winner":
-      return <UserInfo user={cellValue} room={room} />;
+      return <WinnerInfo room={room} />;
+
+    case "private":
+      return (
+        <Chip color={cellValue ? "danger" : "success"} variant="solid">
+          {cellValue ? "Private" : "Public"}
+        </Chip>
+      );
 
     case "gameOverReason":
-      return <span>{cellValue}</span>;
+      return <span>{cellValue || "No Reason"}</span>;
 
     case "createdAt":
       return <CreatedAtCell data={room} />;
@@ -60,7 +92,9 @@ export const RoomRenderCells = ({ room, columnKey }: Props) => {
       );
 
     case "actions":
-      return <ActionCells onViewHref={`/rooms/${room.id}`} />;
+      return (
+        <ActionCells data={room} onViewHref={`/games/history/${room.id}`} />
+      );
   }
 };
 

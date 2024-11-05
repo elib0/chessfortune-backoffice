@@ -7,6 +7,12 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Pagination,
   Table,
   TableBody,
@@ -15,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@nextui-org/react";
-import React, { FC, Key, useEffect, useState } from "react";
+import React, { FC, Key, ReactNode, useEffect, useState } from "react";
 import { RenderCell } from "./render-cell";
 import { Loader } from "../shared";
 import IdentityVerificationRenderCells from "./cells/user/identity-verification-cells";
@@ -27,6 +33,7 @@ import {
   GameReportRenderCells,
   GameSettingsRenderCells,
   LiveRoomRenderCells,
+  RoleRenderCells,
   RoomsHistoryRenderCells,
   RoomsRenderCells,
   RoomsReportsRenderCells,
@@ -35,9 +42,20 @@ import {
 import { ExportIcon } from "../icons/accounts/export-icon";
 import { CSVLink } from "react-csv";
 import { isWithinInterval } from "date-fns";
-import { today, getLocalTimeZone } from "@internationalized/date";
-import { convertFirestoreTimestampToDate } from "@/helpers";
+import {
+  convertFirestoreTimestampToDate,
+  getCalenderDateValue,
+} from "@/helpers";
 import { CancelIcon } from "../icons/cancel-icon";
+import StaffRenderCells from "./cells/staff/staff-render-cells";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase/client";
+import { useAddActivity } from "@/hooks";
+import { DollarIcon } from "../icons/dollar-icon";
+
+type RowKey = React.Key;
 
 type ColumnType = {
   name: string;
@@ -57,7 +75,10 @@ type RenderCellType =
   | "live-rooms"
   | "game-settings"
   | "reports"
-  | "game-reports";
+  | "game-reports"
+  | "staffs"
+  | "roles"
+  | "role-management";
 
 interface Props {
   columns: ColumnType;
@@ -71,6 +92,8 @@ interface Props {
     data: any[];
   };
   showDateFilter?: boolean;
+  showPagination?: boolean;
+  searchInput?: ReactNode;
 }
 
 export const TableWrapper: FC<Props> = ({
@@ -82,7 +105,11 @@ export const TableWrapper: FC<Props> = ({
   showExportIcon = false,
   csvData,
   showDateFilter,
+  showPagination = true,
+  searchInput,
 }) => {
+  const [user] = useAuthState(auth);
+  const { addActivity } = useAddActivity();
   const [page, setPage] = React.useState(1);
   const [tableData, setTableData] = useState<any[]>([]);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -90,6 +117,16 @@ export const TableWrapper: FC<Props> = ({
     start: Date;
     end: Date;
   } | null>(null);
+  const [seed, setSeed] = useState<{
+    isOpen: boolean;
+    isLoading: boolean;
+    value: number;
+  }>({
+    isOpen: false,
+    isLoading: false,
+    value: 1,
+  });
+  const [selectedKeys, setSelectedKeys] = useState<Set<RowKey>>(new Set());
 
   useEffect(() => {
     setTableData(data);
@@ -98,7 +135,7 @@ export const TableWrapper: FC<Props> = ({
   useEffect(() => {
     if (!showDateFilter) return;
 
-    const filteredData = data.filter(({ createdAt }) => {
+    const filteredData = data?.filter(({ createdAt }) => {
       if (!createdAt) return;
 
       const date = convertFirestoreTimestampToDate(createdAt);
@@ -115,7 +152,32 @@ export const TableWrapper: FC<Props> = ({
     setTableData(filteredData);
   }, [data, filterDate, showDateFilter]);
 
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center mt-40">
+        <Loader size="lg" />
+      </div>
+    );
+
+  if (!isLoading && !data?.length)
+    return (
+      <div className="text-center mt-40 w-full">
+        <h4 className="text-xl font-semibold capitalize">{`No ${title} Available`}</h4>
+        <p className="text-gray-500 mt-2">
+          {`
+          We couldn’t find any ${title} data. Please check back later or contact support
+          if you think this is an error.
+          `}
+        </p>
+      </div>
+    );
+
   const totalPages = Math.ceil((tableData?.length || 1) / rowsPerPage);
+
+  const handleSelectionChange = (keys: "all" | Set<RowKey>) =>
+    setSelectedKeys(
+      keys === "all" ? new Set(tableData.map((row) => row.id)) : keys
+    );
 
   const paginatedData = Array.isArray(tableData)
     ? tableData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
@@ -159,30 +221,96 @@ export const TableWrapper: FC<Props> = ({
       case "game-reports":
         return GameReportRenderCells({ report: item, columnKey });
 
+      case "staffs":
+      case "role-management":
+        return StaffRenderCells({ role: item, columnKey });
+
+      case "roles":
+        return RoleRenderCells({ role: item, columnKey });
+
       default:
         return RenderCell({ user: item, columnKey });
     }
   };
 
-  return isLoading ? (
-    <div className="flex justify-center items-center mt-40">
-      <Loader size="lg" />
-    </div>
-  ) : (
+  const createNewInvoices = async () => {
+    try {
+      const { value } = seed;
+      if (!value) throw new Error("Please enter a seed value");
+
+      const selectedUsersLength = Array.from(selectedKeys).length === 1;
+
+      setSeed((prevValue) => {
+        return {
+          ...prevValue,
+          isLoading: true,
+        };
+      });
+
+      await axios.post(`/api/users/invoices`, {
+        ids: Array.from(selectedKeys),
+        seedAmount: value,
+      });
+
+      addActivity({
+        action: `Created ${
+          selectedUsersLength ? "Invoice" : "Invoices"
+        } of User ${selectedUsersLength ? "Id" : "Ids"}: ${
+          selectedUsersLength
+            ? `${[...Array.from(selectedKeys)]}`
+            : `[${[...Array.from(selectedKeys)]}]`
+        } with seed amount ${value}`,
+      });
+
+      toast.success(`Invoice created successfully`);
+      setSeed({
+        value: 0,
+        isOpen: false,
+        isLoading: true,
+      });
+      location.reload();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  return (
     <div className="flex flex-col gap-4 justify-center items-center w-full">
       <div className="flex justify-between items-center w-full">
         {tableData && (
-          <h3 className="capitalize text-xl font-semibold">{`${title} ( ${tableData.length} )`}</h3>
+          <div className="flex justify-between items-center gap-4">
+            <h3
+              className={`capitalize text-xl font-semibold ${
+                title === "Reported Rooms Reports" && "text-danger"
+              }`}
+            >{`${title} ( ${tableData.length} )`}</h3>
+            {searchInput}
+          </div>
         )}
         <div className="flex gap-4 justify-center items-center">
           {showDateFilter && (
             <div className="flex items-center gap-2">
+              {cell === "user" && Array.from(selectedKeys).length > 0 && (
+                <Button
+                  isIconOnly
+                  onPress={() =>
+                    setSeed((prevValue) => {
+                      return {
+                        ...prevValue,
+                        isOpen: true,
+                      };
+                    })
+                  }
+                >
+                  <DollarIcon />
+                </Button>
+              )}
               <DateRangePicker
                 value={
                   filterDate?.start
                     ? {
-                        start: today(getLocalTimeZone()),
-                        end: today(getLocalTimeZone()),
+                        start: getCalenderDateValue(filterDate.start),
+                        end: getCalenderDateValue(filterDate.end),
                       }
                     : null
                 }
@@ -206,18 +334,23 @@ export const TableWrapper: FC<Props> = ({
               </Button>
             </div>
           )}
-          <Dropdown>
-            <DropdownTrigger>
-              <Button variant="bordered">{`Rows per page: ${rowsPerPage}`}</Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              {[10, 15, 20].map((item, index) => (
-                <DropdownItem key={index} onClick={() => setRowsPerPage(item)}>
-                  {item}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+          {showPagination && (
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="bordered">{`Rows per page: ${rowsPerPage}`}</Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Static Actions">
+                {[10, 15, 20].map((item, index) => (
+                  <DropdownItem
+                    key={index}
+                    onClick={() => setRowsPerPage(item)}
+                  >
+                    {item}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          )}
           {showExportIcon && csvData && (
             <Button color="primary" startContent={<ExportIcon />}>
               <CSVLink
@@ -231,12 +364,16 @@ export const TableWrapper: FC<Props> = ({
           )}
         </div>
       </div>
-      <Table>
+      <Table
+        selectionMode="multiple"
+        color="primary"
+        selectedKeys={selectedKeys}
+        onSelectionChange={handleSelectionChange}
+      >
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn
               key={column.uid}
-              hideHeader={column.uid === "actions"}
               align={column.uid === "actions" ? "center" : "start"}
             >
               {column.name}
@@ -257,15 +394,67 @@ export const TableWrapper: FC<Props> = ({
         </TableBody>
       </Table>
 
-      <Pagination
-        isCompact
-        showControls
-        showShadow
-        color="primary"
-        page={page}
-        total={totalPages}
-        onChange={setPage}
-      />
+      {showPagination && (
+        <Pagination
+          isCompact
+          showControls
+          showShadow
+          color="primary"
+          page={page}
+          total={totalPages}
+          onChange={setPage}
+        />
+      )}
+
+      {/* ========== Invoice Modal ========== */}
+
+      <Modal
+        backdrop={"blur"}
+        isOpen={seed.isOpen}
+        onClose={() =>
+          setSeed({
+            value: 0,
+            isOpen: false,
+            isLoading: false,
+          })
+        }
+      >
+        <ModalContent>
+          <>
+            <ModalHeader className="flex flex-col gap-1">Add Seeds</ModalHeader>
+            <ModalBody>
+              <Input
+                label={`Selected Users: ${Array.from(selectedKeys).length}`}
+                variant="bordered"
+                size="lg"
+                labelPlacement="outside"
+                placeholder="Enter your seeds..."
+                value={`${seed.value}`}
+                className="w-full"
+                type={"text"}
+                onChange={({ target: { value } }: any) =>
+                  setSeed((prevValue) => {
+                    return {
+                      ...prevValue,
+                      value,
+                    };
+                  })
+                }
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                color="primary"
+                isLoading={seed.isLoading}
+                isDisabled={seed.isLoading}
+                onPress={createNewInvoices}
+              >
+                {"Save"}
+              </Button>
+            </ModalFooter>
+          </>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

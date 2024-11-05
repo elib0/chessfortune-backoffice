@@ -19,18 +19,17 @@ const ActivityHistoryRenderCells = ({ user, columnKey }: Props) => {
         />
       );
 
+    case "win":
+      return <span>{Number(user.statistics.win)}</span>;
+
+    case "lost":
+      return <span>{Number(user.statistics.loses)}</span>;
+
     case "gamePlayed":
       return (
-        <Chip
-          color={
-            Number(user.statistics.win) + Number(user.statistics.loses) > 0
-              ? "success"
-              : "danger"
-          }
-          variant={"shadow"}
-        >
+        <span>
           {Number(user.statistics.win) + Number(user.statistics.loses)}
-        </Chip>
+        </span>
       );
 
     // case "timeline":

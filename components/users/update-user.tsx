@@ -11,6 +11,8 @@ import {
   ModalHeader,
   Tooltip,
   ModalContent,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import { v4 as uuidv4 } from "uuid";
 import toast from "react-hot-toast";
@@ -22,6 +24,7 @@ import { clientStorageRef } from "@/firebase/client";
 import { uploadBytes, deleteObject, getDownloadURL } from "firebase/storage";
 import axios from "axios";
 import { useAddActivity } from "@/hooks";
+import { boardThemeSetOptions } from "@/helpers/data";
 
 export interface UserFormData {
   displayName: string;
@@ -99,7 +102,7 @@ const UpdateUser: FC<Props> = ({ user, id }) => {
       }
 
       if (!formData.config.boardTheme.set) {
-        throw new Error("Please complete the board theme configuration.");
+        throw new Error("Please select a board theme.");
       }
 
       let newImageRef = `${user.photoURL}` as string;
@@ -253,119 +256,57 @@ const UpdateUser: FC<Props> = ({ user, id }) => {
                 />
               </div>
 
-              {formData?.config?.boardTheme?.set &&
-                formData?.config?.boardTheme?.theme && (
-                  <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
-                    <Input
-                      label="Board Theme Set"
-                      name="set"
-                      isClearable
-                      fullWidth
-                      size="lg"
-                      placeholder="Enter Board Theme Set"
-                      value={formData.config.boardTheme.set}
-                      onChange={({ target: { value } }: any) =>
-                        setFormData((prevValue) => {
-                          return {
-                            ...prevValue,
-                            config: {
-                              ...prevValue.config,
-                              boardTheme: {
-                                ...prevValue.config.boardTheme,
-                                set: value,
-                              },
-                            },
-                          };
-                        })
-                      }
-                    />
-                    <Input
-                      label="Board Theme"
-                      name="theme"
-                      isClearable
-                      fullWidth
-                      size="lg"
-                      type="number"
-                      placeholder="Enter Board Theme"
-                      value={`${formData.config.boardTheme.theme}`}
-                      onChange={({ target: { value } }: any) =>
-                        setFormData((prevValue) => {
-                          return {
-                            ...prevValue,
-                            config: {
-                              ...prevValue.config,
-                              boardTheme: {
-                                ...prevValue.config.boardTheme,
-                                theme: value,
-                              },
-                            },
-                          };
-                        })
-                      }
-                    />
-                  </div>
-                )}
-
-              {(formData?.statistics.win || formData?.statistics.win === 0) &&
-                (formData?.statistics.loses ||
-                  formData?.statistics.loses === 0) &&
-                (formData?.seeds || formData?.seeds === 0) && (
-                  <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
-                    <Input
-                      label="Statistics Win"
-                      name="win"
-                      isClearable
-                      fullWidth
-                      size="lg"
-                      type="number"
-                      placeholder="Enter Wins"
-                      value={`${formData.statistics.win}`}
-                      onChange={({ target: { value } }: any) =>
-                        setFormData((prevValue) => {
-                          return {
-                            ...prevValue,
-                            statistics: {
-                              ...prevValue.statistics,
-                              win: value,
-                            },
-                          };
-                        })
-                      }
-                    />
-                    <Input
-                      label="Statistics Loses"
-                      name="loses"
-                      isClearable
-                      fullWidth
-                      size="lg"
-                      type="number"
-                      placeholder="Enter Loses"
-                      value={`${formData.statistics.loses}`}
-                      onChange={({ target: { value } }: any) =>
-                        setFormData((prevValue) => {
-                          return {
-                            ...prevValue,
-                            statistics: {
-                              ...prevValue.statistics,
-                              loses: value,
-                            },
-                          };
-                        })
-                      }
-                    />
-                    <Input
-                      label="Seeds"
-                      name="seeds"
-                      isClearable
-                      fullWidth
-                      size="lg"
-                      type="number"
-                      placeholder="Enter Seeds"
-                      value={`${formData.seeds}`}
-                      onChange={handleChange}
-                    />
-                  </div>
-                )}
+              <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">
+                <Select
+                  size="lg"
+                  className="w-full"
+                  label="Board Theme Set"
+                  placeholder="Select Board Theme Set"
+                  selectedKeys={[formData.config.boardTheme.set]}
+                  onChange={({ target: { value } }: any) =>
+                    setFormData((prevValue) => {
+                      return {
+                        ...prevValue,
+                        config: {
+                          ...prevValue.config,
+                          boardTheme: {
+                            ...prevValue.config.boardTheme,
+                            set: value,
+                          },
+                        },
+                      };
+                    })
+                  }
+                >
+                  {boardThemeSetOptions.map((item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  ))}
+                </Select>
+                <Input
+                  label="Board Theme"
+                  name="theme"
+                  isClearable
+                  fullWidth
+                  size="lg"
+                  type="number"
+                  placeholder="Enter Board Theme"
+                  value={`${formData.config.boardTheme.theme}`}
+                  onChange={({ target: { value } }: any) =>
+                    setFormData((prevValue) => {
+                      return {
+                        ...prevValue,
+                        config: {
+                          ...prevValue.config,
+                          boardTheme: {
+                            ...prevValue.config.boardTheme,
+                            theme: value,
+                          },
+                        },
+                      };
+                    })
+                  }
+                />
+              </div>
             </div>
           </ModalBody>
           <Divider className="mt-4" />

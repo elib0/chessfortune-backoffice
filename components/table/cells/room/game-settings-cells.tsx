@@ -1,8 +1,6 @@
 import { Props } from "react-apexcharts";
 import ActionCells from "../actions-cell";
 import UpdateGame from "@/components/game/update-game";
-import axios from "axios";
-import toast from "react-hot-toast";
 import RoomUserInfo from "./room-user-info-cell";
 
 export const GameSettingsRenderCells = ({ game, columnKey }: Props) => {
@@ -21,19 +19,9 @@ export const GameSettingsRenderCells = ({ game, columnKey }: Props) => {
     case "actions":
       return (
         <ActionCells
+          data={game}
           onEdit={<UpdateGame game={game} id={game.id} />}
-          onDeleteClick={async () => {
-            const {
-              data: { message },
-            } = await axios.delete(`/api/rooms/${game.id}`, {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
-
-            toast.success(message);
-            location.reload();
-          }}
+          // deleteApi={`/api/rooms/${game.id}`}
         />
       );
 

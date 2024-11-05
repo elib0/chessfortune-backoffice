@@ -10,7 +10,7 @@ import { PaymentTable } from "@/components/table/payment/payment-table";
 const Page = () => {
   const { invoices, loading } = useFetchInvoices();
   const paymentInvoice =
-    invoices.length > 0 ? invoices.filter(({ amount }) => amount < 0) : [];
+    invoices?.length > 0 ? invoices.filter(({ amount }) => amount > 0) : [];
 
   return (
     <AppContainer
@@ -31,7 +31,7 @@ const Page = () => {
         isLoading={loading}
         data={paymentInvoice}
         columns={withdrawlColumns}
-        title={`Payments`}
+        title={`Withdrawals`}
         table="withdrawal"
       />
     </AppContainer>

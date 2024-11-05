@@ -1,24 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GameHistory } from "@/types";
 import { Chessboard } from "react-chessboard";
 import { InfoIcon } from "../icons/accounts/info-icon";
 import { ArrowLeftIcon } from "../icons/arrow-left-icon";
 import { ArrowRightIcon } from "../icons/arrow-right-icon";
 import { SearchScanIcon } from "../icons/search-scan-icon";
-import { Modal, ModalContent, Button, useDisclosure } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  Button,
+  useDisclosure,
+  Chip,
+} from "@nextui-org/react";
 
 const AppChessBoard = ({ game }: { game: GameHistory[] }) => {
   const [moveIndex, setMoveIndex] = useState(0);
+  const [userMove, setUserMove] = useState<string | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isInfoOpen,
     onOpen: onInfoOpen,
     onOpenChange: onInfoOpenChange,
   } = useDisclosure();
+  const [analysis, setAnalysis] = useState<string>("");
+  const [validMove, setValidMove] = useState<string>("");
 
   const [currentFen, setCurrentFen] = useState(game[0]?.before || "start");
+
+  useEffect(() => {
+    const stockfish = new Worker("/stockfish/stockfish.js");
+
+    stockfish.onmessage = (event) => {
+      const output = event.data;
+
+      if (output.includes("info") || output.includes("bestmove")) {
+        setAnalysis(output);
+
+        const bestMoveMatch = output.match(/bestmove (\w+)/);
+        if (bestMoveMatch) {
+          const bestMove = bestMoveMatch[1];
+
+          if (userMove) {
+            if (userMove !== bestMove) {
+              setValidMove(
+                `Suspicious move detected: ${userMove}. Best move is ${bestMove}.`
+              );
+            } else {
+              setValidMove(`Move ${userMove} is valid.`);
+            }
+          }
+        }
+      }
+    };
+
+    stockfish.postMessage("uci");
+    stockfish.postMessage(`position fen ${currentFen}`);
+    stockfish.postMessage("go depth 15");
+
+    return () => {
+      stockfish.terminate();
+    };
+  }, [currentFen, userMove]);
 
   const handleMove = (direction: "left" | "right") => {
     let newIndex = moveIndex;
@@ -31,6 +75,10 @@ const AppChessBoard = ({ game }: { game: GameHistory[] }) => {
 
     setMoveIndex(newIndex);
     setCurrentFen(game[newIndex].before);
+
+    // Capture the user's move
+    const move = game[newIndex]?.san; // San notation of the current move
+    setUserMove(move); // Update the userMove state
   };
 
   return (
@@ -45,7 +93,7 @@ const AppChessBoard = ({ game }: { game: GameHistory[] }) => {
         closeButton={<></>}
       >
         <ModalContent>
-          <div className="p-3">
+          <div className="p-3 space-y-3">
             <div className="relative p-6 mx-auto bg-content2 shadow-md rounded-xl w-full">
               <Chessboard
                 allowDragOutsideBoard={false}
@@ -54,7 +102,34 @@ const AppChessBoard = ({ game }: { game: GameHistory[] }) => {
                 position={currentFen}
               />
             </div>
-            <div className={`flex items-center justify-between mt-2`}>
+            {/* Display Stockfish analysis */}
+            {analysis && (
+              <div className="flex flex-col justify-center items-center p-2 px-4 mx-auto bg-content2 shadow-md rounded-xl w-fit">
+                <h4 className="font-bold underline underline-offset-4">
+                  Analysis
+                </h4>
+                <p className="font-medium capitalize text-success text-center">
+                  {analysis}
+                </p>
+              </div>
+            )}
+            {/* Display Valid Moves */}
+            {validMove && (
+              <div className="flex flex-col justify-center items-center w-full">
+                <Chip
+                  radius="sm"
+                  className="py-4"
+                  color={validMove.startsWith("S") ? "danger" : "success"}
+                >
+                  <span
+                    className={`font-semibold capitalize text-sm text-center`}
+                  >
+                    {validMove}
+                  </span>
+                </Chip>
+              </div>
+            )}
+            <div className={`flex items-center justify-between`}>
               <Button isIconOnly>{moveIndex}</Button>
 
               <div className="flex items-center justify-between mx-auto p-2 bg-content2 rounded-xl w-fit space-x-2">

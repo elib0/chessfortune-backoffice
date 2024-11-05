@@ -42,14 +42,19 @@ export const RoomsHistoryRenderCells = ({ room, columnKey }: Props) => {
 
     case "history":
       return (
-        <ActionCells
-          onShowDeleteIcon={false}
-          onViewHref={`/games/history/${room.id}`}
-        />
+        <ActionCells data={room} onViewHref={`/games/history/${room.id}`} />
       );
 
     case "analysis":
-      return <AppChessBoard game={room?.game?.history} />;
+      return (
+        <>
+          {room?.game?.history ? (
+            <AppChessBoard game={room?.game?.history} />
+          ) : (
+            <span className="text-base font-medium">No game Available</span>
+          )}
+        </>
+      );
 
     default:
       return renderTooltipCell(cellValue);

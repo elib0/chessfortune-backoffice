@@ -6,9 +6,12 @@ export async function GET(
   { params: { id } }: { params: { id: string } }
 ) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const activityDoc = firestore.collection("activity");

@@ -24,8 +24,8 @@ import { Sidebar } from "./sidebar.styles";
 import BriefcaseIcon from "../icons/sidebar/brifecase-icon";
 import GamepadIcon from "../icons/sidebar/game-pad-icon";
 import { CollapseIconItems } from "./collapse-icon-item";
-import { LockIcon } from "../icons/auth";
 import { Logo } from "../shared";
+import { UserSettingIcon } from "../icons/user-setting-icon";
 
 export const SidebarWrapper = () => {
   const pathname = usePathname();
@@ -64,11 +64,11 @@ export const SidebarWrapper = () => {
                 href: "/users",
                 title: "User Management",
               },
-              {
-                icon: <BadgeCheckIcon />,
-                href: "/users/identity-verification",
-                title: "Identity Verification",
-              },
+              // {
+              //   icon: <BadgeCheckIcon />,
+              //   href: "/users/identity-verification",
+              //   title: "Identity Verification",
+              // },
               {
                 icon: <ActivityIcon />,
                 href: "/users/activity-history",
@@ -126,15 +126,20 @@ export const SidebarWrapper = () => {
                 title: "Staff Management",
               },
               {
+                icon: <UserSettingIcon />,
+                href: "/staff/role-management",
+                title: "Role Management",
+              },
+              {
                 icon: <ActivityIcon />,
                 href: "/staff/activity-monitoring",
                 title: "Activity Monitoring",
               },
-              {
-                icon: <BookOpenIcon />,
-                href: "/staff/training-and-awareness",
-                title: "Training and Awareness",
-              },
+              // {
+              //   icon: <BookOpenIcon />,
+              //   href: "/staff/training-and-awareness",
+              //   title: "Training and Awareness",
+              // },
             ]}
             title="Staff"
           />
@@ -153,15 +158,20 @@ export const SidebarWrapper = () => {
                 href: "/reports/game",
                 title: "Game Reports",
               },
+              // {
+              //   icon: <ReportsIcon />,
+              //   href: "/reports/security",
+              //   title: "Security Reports",
+              // },
+              // {
+              //   icon: <ReportsIcon />,
+              //   href: "/reports/custom",
+              //   title: "Custom Reports",
+              // },
               {
                 icon: <ReportsIcon />,
-                href: "/reports/security",
-                title: "Security Reports",
-              },
-              {
-                icon: <ReportsIcon />,
-                href: "/reports/custom",
-                title: "Custom Reports",
+                href: "/reports/room",
+                title: "Room Reports",
               },
             ]}
             title="Reports"
@@ -186,11 +196,11 @@ export const SidebarWrapper = () => {
                 href: "/payments/balances-and-movements",
                 title: "Balances and Movements",
               },
-              {
-                icon: <SettingsIcon />,
-                href: "/payments/gateway-settings",
-                title: "Payment Gateway Settings",
-              },
+              // {
+              //   icon: <SettingsIcon />,
+              //   href: "/payments/gateway-settings",
+              //   title: "Payment Gateway Settings",
+              // },
             ]}
             title="Payments"
           />
@@ -200,20 +210,20 @@ export const SidebarWrapper = () => {
             icon={<ShareIcon />}
             items={[
               {
-                icon: <BriefcaseIcon />,
-                href: "/referrals",
-                title: "Referrals Management",
-              },
-              {
                 icon: <PieChartIcon />,
                 href: "/referrals/program-overview",
                 title: "Referrals Program Overview",
               },
               {
-                icon: <GiftIcon />,
-                href: "/referrals/rewards",
-                title: "Referrals Rewards",
+                icon: <BriefcaseIcon />,
+                href: "/referrals/referrals-management",
+                title: "Referrals Management",
               },
+              // {
+              //   icon: <GiftIcon />,
+              //   href: "/referrals/rewards",
+              //   title: "Referrals Rewards",
+              // },
             ]}
             title="Referrals"
           />

@@ -3,9 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(_: NextRequest) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const activitiesCollection = firestore.collection("activity");

@@ -10,8 +10,6 @@ import { useFetchRoomsReports } from "@/hooks";
 const Page = () => {
   const { rooms, loading } = useFetchRoomsReports();
 
-  console.log(rooms);
-
   return (
     <AppContainer
       breadCrumbs={[
@@ -32,7 +30,7 @@ const Page = () => {
         data={rooms}
         columns={roomsReportsColumns}
         cell={"rooms-reports"}
-        title={"rooms"}
+        title={"Reported Rooms Reports"}
       />
     </AppContainer>
   );

@@ -1,17 +1,22 @@
 import React from "react";
 
-const DashboardIcon = () => {
+interface Props {
+  color?: string;
+  size?: number;
+}
+
+export const GameIcon = ({ color = "#969696", size = 24 }: Props) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke="#969696"
+      stroke={color}
     >
       <line x1="6" x2="10" y1="11" y2="11" />
       <line x1="8" x2="8" y1="9" y2="13" />
@@ -22,4 +27,4 @@ const DashboardIcon = () => {
   );
 };
 
-export default DashboardIcon;
+export default GameIcon;

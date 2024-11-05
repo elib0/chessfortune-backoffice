@@ -3,36 +3,36 @@
 import {
   Button,
   Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
   Input,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Select,
+  SelectItem,
   Textarea,
 } from "@nextui-org/react";
-import React, { FC, useMemo, useState } from "react";
+import React, { FC, useState } from "react";
 import Loader from "../shared/loader";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useAddActivity } from "@/hooks";
-import type { Selection } from "@nextui-org/react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase/client";
+import { reportTypes, categories } from "@/helpers/data";
 
 interface Report {
   amount: number;
-  category?: "Salary" | "Rent";
+  type: string;
+  category: string;
   description: string;
 }
 
 const formState: Report = {
-  amount: 5.0,
-  category: "Salary",
+  amount: 5,
+  type: reportTypes[0].key,
+  category: categories[0].key,
   description: "",
 };
 
@@ -42,15 +42,6 @@ const AddReport: FC = () => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [formData, setFormData] = useState<Report>(formState);
   const [visible, setVisible] = useState<boolean>(false);
-
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(
-    new Set(["Salary"])
-  );
-
-  const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
-    [selectedKeys]
-  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -67,17 +58,15 @@ const AddReport: FC = () => {
     try {
       setUploading(true);
 
-      const { amount, description } = formData;
+      const { amount, description, type, category } = formData;
 
-      if (!amount) {
-        setUploading(false);
-        return toast.error("Amount is required.");
-      }
-
-      if (!description) {
-        setUploading(false);
-        return toast.error("Description is required.");
-      }
+      if (!amount || Number(amount) === 0)
+        throw new Error("Amount is required.");
+      if (Number(amount) <= 0)
+        throw new Error("Amount must be a positive value.");
+      if (!description) throw new Error("Description is required.");
+      if (!type) throw new Error("Type is required.");
+      if (!category) throw new Error("Category is required.");
 
       const {
         data: { message },
@@ -85,7 +74,6 @@ const AddReport: FC = () => {
         "/api/reports",
         {
           ...formData,
-          category: selectedValue,
           userId: user?.uid,
         },
         {
@@ -104,15 +92,15 @@ const AddReport: FC = () => {
       setVisible(false);
       location.reload();
       setFormData(formState);
-    } catch (error) {
+    } catch (error: any) {
       setUploading(false);
-      toast.error("Error updating document");
+      toast.error(error.message);
     }
   };
 
   return (
     <>
-      <Button onClick={() => setVisible(true)}>Add Report</Button>
+      <Button onClick={() => setVisible(true)}>Add Income/Expense</Button>
 
       <Modal
         isOpen={visible}
@@ -120,11 +108,11 @@ const AddReport: FC = () => {
         className="max-w-2xl"
         onClose={() => {
           setVisible(false);
-          setSelectedKeys(new Set(["Salary"]));
+          setFormData(formState);
         }}
       >
         <ModalContent>
-          <ModalHeader>Add New Report</ModalHeader>
+          <ModalHeader>Add Income/Expense</ModalHeader>
           <Divider />
           <ModalBody>
             <div className="flex flex-col flex-wrap gap-4 lg:flex-nowrap">
@@ -135,33 +123,48 @@ const AddReport: FC = () => {
                   isClearable
                   fullWidth
                   size="lg"
+                  min={1}
                   placeholder="Enter Amount"
                   value={`${formData.amount}`}
                   onChange={handleChange}
                   type="number"
                 />
-                <div className="flex flex-col gap-2 w-full">
-                  Category
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button variant="bordered" className="capitalize">
-                        {selectedValue}
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label="Single selection example"
-                      variant="flat"
-                      disallowEmptySelection
-                      selectionMode="single"
-                      selectedKeys={selectedKeys}
-                      onSelectionChange={setSelectedKeys}
-                    >
-                      {["Salaray", "Rent"].map((reason) => (
-                        <DropdownItem key={reason}>{reason}</DropdownItem>
-                      ))}
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
+                <Select
+                  size="lg"
+                  label="Select Type"
+                  className="w-full"
+                  defaultSelectedKeys={[formData.type]}
+                  onChange={({ target: { value } }: any) =>
+                    setFormData((prevValue) => {
+                      return {
+                        ...prevValue,
+                        type: value,
+                      };
+                    })
+                  }
+                >
+                  {reportTypes.map((item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  size="lg"
+                  label="Select Category"
+                  className="w-full"
+                  defaultSelectedKeys={[formData.category]}
+                  onChange={({ target: { value } }: any) =>
+                    setFormData((prevValue) => {
+                      return {
+                        ...prevValue,
+                        category: value,
+                      };
+                    })
+                  }
+                >
+                  {categories.map((item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  ))}
+                </Select>
               </div>
 
               <div className="flex justify-center flex-wrap gap-4 lg:flex-nowrap">

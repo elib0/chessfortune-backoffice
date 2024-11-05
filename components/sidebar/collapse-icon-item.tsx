@@ -32,7 +32,7 @@ export const CollapseIconItems = ({ icon, items, title }: Props) => {
             color={"primary"}
             placement="right"
           >
-            <NextLink href={`${item.href}?fresh=1`}>
+            <NextLink href={`${item.href}`}>
               <div
                 className={`flex items-center justify-start gap-3 p-3 w-full rounded-lg hover:bg-default-100`}
               >

@@ -6,7 +6,6 @@ import AppContainer from "@/components/shared/app-container";
 import Loader from "@/components/shared/loader";
 import { convertFirestoreTimestampToDate } from "@/helpers";
 import { useFetchRoomById } from "@/hooks";
-import { Button } from "@nextui-org/react";
 import { useParams } from "next/navigation";
 import { FC } from "react";
 
@@ -99,58 +98,68 @@ const Page: FC = () => {
             </div>
 
             {/* Players Info Section */}
-            <div>
-              <h3 className="text-lg font-semibold">Player White</h3>
-              <p className="text-gray-600">
-                Name:{" "}
-                <span className="text-gray-500">
-                  {room.players.w.profile.displayName}
-                </span>
-              </p>
-              <p className="text-gray-600">
-                Elo:{" "}
-                <span className="text-gray-500">
-                  {room.players.w.profile.elo}
-                </span>
-              </p>
-              <p className="text-gray-600">
-                Time Left:{" "}
-                <span className="text-gray-500">
-                  {room.players.w.currenTime}s
-                </span>
-              </p>
-            </div>
+            {room?.players?.w?.profile && (
+              <div>
+                <h3 className="text-lg font-semibold">Player White</h3>
+                <p className="text-gray-600">
+                  Name:{" "}
+                  <span className="text-gray-500">
+                    {room.players.w.profile.displayName}
+                  </span>
+                </p>
+                <p className="text-gray-600">
+                  Elo:{" "}
+                  <span className="text-gray-500">
+                    {room.players.w.profile.elo}
+                  </span>
+                </p>
+                <p className="text-gray-600">
+                  Time Left:{" "}
+                  <span className="text-gray-500">
+                    {room.players.w.currenTime}s
+                  </span>
+                </p>
+              </div>
+            )}
 
-            <div>
-              <h3 className="text-lg font-semibold">Player Black</h3>
-              <p className="text-gray-600">
-                Name:{" "}
-                <span className="text-gray-500">
-                  {room.players.b.profile.displayName}
-                </span>
-              </p>
-              <p className="text-gray-600">
-                Elo:{" "}
-                <span className="text-gray-500">
-                  {room.players.b.profile.elo}
-                </span>
-              </p>
-              <p className="text-gray-600 capitalize">
-                Time Left:{" "}
-                <span className="text-gray-500">
-                  {room.players.b.currenTime}s
-                </span>
-              </p>
-            </div>
+            {room?.players?.b?.profile && (
+              <div>
+                <h3 className="text-lg font-semibold">Player Black</h3>
+                <p className="text-gray-600">
+                  Name:{" "}
+                  <span className="text-gray-500">
+                    {room.players.b.profile.displayName}
+                  </span>
+                </p>
+                <p className="text-gray-600">
+                  Elo:{" "}
+                  <span className="text-gray-500">
+                    {room.players.b.profile.elo}
+                  </span>
+                </p>
+                <p className="text-gray-600 capitalize">
+                  Time Left:{" "}
+                  <span className="text-gray-500">
+                    {room.players.b.currenTime}s
+                  </span>
+                </p>
+              </div>
+            )}
 
-            <div>
-              <div className="flex gap-2 justify-center items-center">
-                <span className="text-base font-semibold">Analysis</span>
-                <div className={`bg-content2 p-1 h-fit rounded-xl`}>
-                  <AppChessBoard game={room.game.history} />
+            {room?.game?.history ? (
+              <div>
+                <div className="flex gap-2 justify-center items-center">
+                  <span className="text-base font-semibold">Analysis</span>
+                  <div className={`bg-content2 p-1 h-fit rounded-xl`}>
+                    <AppChessBoard game={room.game.history} />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <span className="text-base font-medium">No game Available</span>
+              </div>
+            )}
           </div>
         )
       )}

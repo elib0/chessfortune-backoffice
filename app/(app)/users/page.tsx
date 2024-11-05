@@ -14,7 +14,18 @@ const Page = () => {
   const [filterValue, setFilterValue] = useState<string>("");
   const { users, loading } = useFetchUsers();
 
-  const filteredUsers = users.filter(({ displayName, email }) => {
+  if (!loading && !users?.length)
+    return (
+      <div className="text-center mt-40">
+        <h4 className="text-xl font-semibold">No Users Available</h4>
+        <p className="text-gray-500 mt-2">
+          We couldn’t find any users. Please check back later or contact support
+          if you think this is an error.
+        </p>
+      </div>
+    );
+
+  const filteredUsers = users?.filter(({ displayName, email }) => {
     const handleFilterQuery = (query: string) =>
       query?.toLowerCase().trim().includes(filterValue?.toLowerCase().trim());
 

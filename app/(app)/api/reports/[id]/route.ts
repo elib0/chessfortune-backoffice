@@ -72,7 +72,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.log(`MY Error`, error);
     return NextResponse.json(
       { error: "Failed to delete Report" },
       { status: 500 }

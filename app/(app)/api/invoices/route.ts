@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(_: NextRequest) {
   try {
     const invoicesCollectionRef = firestore.collection("invoices");
-    const querySnapshot = await invoicesCollectionRef.get();
+    const querySnapshot = await invoicesCollectionRef
+      .orderBy("createdAt", "desc")
+      .get();
 
     const invoices = querySnapshot.docs.map((doc) => ({
       id: doc.id,

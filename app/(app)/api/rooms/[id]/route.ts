@@ -7,9 +7,12 @@ export async function GET(
   { params: { id } }: { params: { id: string } }
 ) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const rommsDoc = firestore.collection("rooms").doc(id as string);
@@ -73,7 +76,6 @@ export async function PUT(
       { status: 201 }
     );
   } catch (error) {
-    console.log(`MY Error`, error);
     return NextResponse.json(
       { error: "Failed to update Game" },
       { status: 500 }
@@ -104,7 +106,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.log(`MY Error`, error);
     return NextResponse.json(
       { error: "Failed to delete Game" },
       { status: 500 }

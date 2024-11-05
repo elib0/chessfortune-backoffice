@@ -20,3 +20,5 @@ export { default as RoomsReportsRenderCells } from "./room/rooms-reports-cells";
 export { default as RoomsHistoryRenderCells } from "./room/room-history-cells";
 export { default as LiveRoomRenderCells } from "./room/live-room-cells";
 export { default as GameSettingsRenderCells } from "./room/game-settings-cells";
+
+export { default as RoleRenderCells } from "./staff/role-render-cells";

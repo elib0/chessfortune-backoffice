@@ -97,6 +97,7 @@ export interface RoomData {
     b: Player;
     w: Player;
   };
+  private: boolean;
   finishAt: Timestamp;
 }
 
@@ -128,10 +129,41 @@ export interface RoomsReports {
 
 export interface ReportsData {
   id: string;
-  type: "income" | "expense" | string;
+  type: string;
   amount: number;
-  category: "Salary" | "Rent";
+  category: string;
   createdAt: TimestampType;
   description: string;
   userId: string;
+}
+
+export interface Role {
+  createdAt: Timestamp;
+  role: string;
+  id: string;
+}
+
+export interface Permission {
+  createdAt: Timestamp;
+  email: string;
+  pages: string[];
+  role: string;
+  userId: string;
+}
+
+interface Referral {
+  id: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  referrals: {
+    id: string;
+    photoURL: string;
+    displayName: string;
+    email: string;
+    status: string;
+    online: boolean;
+    amount: number;
+    createdAt: Timestamp;
+  }[];
 }

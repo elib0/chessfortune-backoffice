@@ -1,4 +1,4 @@
-import { firestore } from "@/firebase/server";
+import { adminAuth, firestore } from "@/firebase/server";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,9 +7,12 @@ export async function GET(
   { params: { id } }: { params: { id: string } }
 ) {
   if (!firestore)
-    return new NextResponse("Internal Server Error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      }
+    );
 
   try {
     const userDoc = firestore.collection("profiles").doc(id as string);
@@ -99,9 +102,43 @@ export async function PUT(
       { status: 201 }
     );
   } catch (error) {
-    console.log(`MY Error`, error);
     return NextResponse.json(
       { error: "Failed to update Profile" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params: { id } }: { params: { id: string } }
+) {
+  if (req.method !== "DELETE") {
+    return NextResponse.json(
+      { error: "Method Not Allowed" },
+      {
+        status: 405,
+      }
+    );
+  }
+
+  try {
+    await firestore.collection("profiles").doc(id).delete();
+
+    try {
+      await adminAuth.deleteUser(id);
+    } catch (error) {
+      console.error(`Error deleting auth user with ID ${id}:`, error);
+    }
+    revalidatePath(req.url);
+
+    return NextResponse.json(
+      { message: "Profiles deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete Profiles" },
       { status: 500 }
     );
   }

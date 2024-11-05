@@ -31,9 +31,12 @@ import React, { FC, useState, useEffect } from "react";
 import { CSVLink } from "react-csv";
 import { PaymentRenderCells } from "../cells";
 import { isWithinInterval } from "date-fns";
-import { convertFirestoreTimestampToDate, httpHeaderOptions } from "@/helpers";
+import {
+  convertFirestoreTimestampToDate,
+  getCalenderDateValue,
+  httpHeaderOptions,
+} from "@/helpers";
 import { CancelIcon } from "@/components/icons/cancel-icon";
-import { today, getLocalTimeZone } from "@internationalized/date";
 import toast from "react-hot-toast";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase/client";
@@ -131,7 +134,7 @@ export const PaymentTable: FC<Props> = ({
   const [selectedKeys, setSelectedKeys] = useState<Set<RowKey>>(new Set());
 
   useEffect(() => {
-    const paymentWithUserData = data.map((paymentData) => {
+    const paymentWithUserData = data?.map((paymentData) => {
       const matchingUser = users.find(
         (userData) => paymentData.profileId === userData.id
       );
@@ -142,7 +145,7 @@ export const PaymentTable: FC<Props> = ({
       };
     });
 
-    const filteredData = paymentWithUserData.filter(
+    const filteredData = paymentWithUserData?.filter(
       ({ status, createdAt, seedAmount, user }) => {
         const date = convertFirestoreTimestampToDate(createdAt);
 
@@ -158,9 +161,10 @@ export const PaymentTable: FC<Props> = ({
 
         const seedRange =
           Number(seedAmount) >= filterSeedRange[0] &&
-          seedAmount <= filterSeedRange[1];
+          Number(seedAmount) <= filterSeedRange[1];
 
         const statusMatches = statusFilter === "all" || status === statusFilter;
+
         const dateMatches = filterDate
           ? isWithinInterval(date, {
               start: new Date(filterDate.start),
@@ -184,6 +188,26 @@ export const PaymentTable: FC<Props> = ({
     filterQuery,
     showSeedRange,
   ]);
+
+  if (isLoading || usersIsLoading)
+    return (
+      <div className="flex justify-center items-center mt-40">
+        <Loader size="lg" />
+      </div>
+    );
+
+  if (!isLoading && !usersIsLoading && !data?.length && !users?.length)
+    return (
+      <div className="text-center mt-40">
+        <h4 className="text-xl font-semibold capitalize">{`No ${title} Available`}</h4>
+        <p className="text-gray-500 mt-2">
+          {`
+          We couldn’t find any ${title} data. Please check back later or contact support
+          if you think this is an error.
+          `}
+        </p>
+      </div>
+    );
 
   const handleSelectionChange = (keys: "all" | Set<RowKey>) =>
     setSelectedKeys(
@@ -222,7 +246,7 @@ export const PaymentTable: FC<Props> = ({
       const { user: userData } = await data.json();
 
       if (!userData.pin) {
-        const res = await fetch(`/api/users/pin/${user.uid}`, {
+        const res = await fetch(`/api/users/pin/${user.email}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -284,12 +308,12 @@ export const PaymentTable: FC<Props> = ({
   };
 
   const getPaymentStatusLength = (paymentStatus: StatusType): number =>
-    data.filter(({ status }) => status === paymentStatus).length || 0;
+    data?.filter(({ status }) => status === paymentStatus).length || 0;
 
   const getPaymentStatusTotalAmount = (paymentStatus: StatusType): number =>
     Math.abs(
       data
-        .filter(({ status }) => status === paymentStatus)
+        ?.filter(({ status }) => status === paymentStatus)
         .reduce((prevValue, curValue) => prevValue + curValue.amount, 0)
         .toFixed(2)
     );
@@ -302,7 +326,7 @@ export const PaymentTable: FC<Props> = ({
 
   const statusFilterOptions =
     table === "payment"
-      ? ["all", "completed", "expired"]
+      ? ["all", "completed"]
       : ["all", "new", "processing", "completed", "expired"];
 
   const submitSeeds = async () => {
@@ -330,8 +354,16 @@ export const PaymentTable: FC<Props> = ({
         ...httpHeaderOptions,
       });
 
+      const selectedInvoiceLength = Array.from(selectedKeys).length === 1;
+
       addActivity({
-        action: `Updated invoice seeds by user email: ${user?.email}`,
+        action: `Updated ${
+          selectedInvoiceLength ? "Invoice seed" : "Invoices seed"
+        } of Invoice ${selectedInvoiceLength ? "Id" : "Ids"}: ${
+          selectedInvoiceLength
+            ? `${[...Array.from(selectedKeys)]}`
+            : `[${[...Array.from(selectedKeys)]}]`
+        } with seed amount ${value}`,
       });
 
       toast.success(`Seed updated successfully`);
@@ -346,11 +378,7 @@ export const PaymentTable: FC<Props> = ({
     }
   };
 
-  return isLoading || usersIsLoading ? (
-    <div className="flex justify-center items-center mt-40">
-      <Loader size="lg" />
-    </div>
-  ) : (
+  return (
     <div className="flex flex-col gap-4 justify-center items-center w-full">
       <div className="flex gap-4 justify-between items-center w-full">
         {tableData && (
@@ -376,14 +404,16 @@ export const PaymentTable: FC<Props> = ({
                     : "danger"
                 }
               >
-                <div className="flex gap-2 font-semibold">
-                  <span className="capitalize">{`${value}:`}</span>
-                  <span>
-                    {`$${getPaymentStatusTotalAmount(
-                      value as StatusType
-                    )}, ( ${getPaymentStatusLength(value as StatusType)} )`}
-                  </span>
-                </div>
+                {
+                  <div className="flex gap-2 font-semibold">
+                    <span className="capitalize">{`${value}:`}</span>
+                    <span>
+                      {`$${
+                        getPaymentStatusTotalAmount(value as StatusType) || 0
+                      }, ( ${getPaymentStatusLength(value as StatusType)} )`}
+                    </span>
+                  </div>
+                }
               </Chip>
             ))}
         </div>
@@ -391,25 +421,27 @@ export const PaymentTable: FC<Props> = ({
 
       <div className="flex justify-between items-center w-full">
         <div className="flex gap-3 items-center w-full">
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="bordered"
-                className="capitalize"
-              >{`${statusFilter}`}</Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
-              {statusFilterOptions.map((item, index) => (
-                <DropdownItem
-                  key={index}
-                  onClick={() => setStatusFilter(item as StatusSelectionType)}
+          {table !== "payment" && (
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  variant="bordered"
                   className="capitalize"
-                >
-                  {item}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+                >{`${statusFilter}`}</Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Static Actions">
+                {statusFilterOptions.map((item, index) => (
+                  <DropdownItem
+                    key={index}
+                    onClick={() => setStatusFilter(item as StatusSelectionType)}
+                    className="capitalize"
+                  >
+                    {item}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          )}
           <Input
             placeholder="Search Users..."
             value={filterQuery}
@@ -438,7 +470,7 @@ export const PaymentTable: FC<Props> = ({
         </div>
 
         <div className="flex gap-3 justify-end items-center w-full">
-          {table === "payment" && Array.from(selectedKeys).length > 0 && (
+          {table === "withdrawal" && Array.from(selectedKeys).length > 0 && (
             <Button
               isIconOnly
               onPress={() =>
@@ -457,8 +489,8 @@ export const PaymentTable: FC<Props> = ({
             value={
               filterDate?.start
                 ? {
-                    start: today(getLocalTimeZone()),
-                    end: today(getLocalTimeZone()),
+                    start: getCalenderDateValue(filterDate.start),
+                    end: getCalenderDateValue(filterDate.end),
                   }
                 : null
             }
@@ -658,7 +690,7 @@ export const PaymentTable: FC<Props> = ({
         </ModalContent>
       </Modal>
 
-      {/* ========== Approve Modal ========== */}
+      {/* ========== Seeds Modal ========== */}
 
       <Modal
         backdrop={"blur"}
@@ -676,7 +708,7 @@ export const PaymentTable: FC<Props> = ({
             <ModalHeader className="flex flex-col gap-1">Add Seeds</ModalHeader>
             <ModalBody>
               <Input
-                label={`Selected seeds: ${Array.from(selectedKeys).length}`}
+                label={`Selected Payments: ${Array.from(selectedKeys).length}`}
                 variant="bordered"
                 size="lg"
                 labelPlacement="outside"
