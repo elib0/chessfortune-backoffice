@@ -20,6 +20,7 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Textarea,
 } from "@nextui-org/react";
 import React, { FC, Key, ReactNode, useEffect, useState } from "react";
 import { RenderCell } from "./render-cell";
@@ -121,10 +122,12 @@ export const TableWrapper: FC<Props> = ({
     isOpen: boolean;
     isLoading: boolean;
     value: number;
+    description: string;
   }>({
     isOpen: false,
     isLoading: false,
     value: 1,
+    description: "",
   });
   const [selectedKeys, setSelectedKeys] = useState<Set<RowKey>>(new Set());
 
@@ -235,8 +238,9 @@ export const TableWrapper: FC<Props> = ({
 
   const createNewInvoices = async () => {
     try {
-      const { value } = seed;
+      const { value, description } = seed;
       if (!value) throw new Error("Please enter a seed value");
+      if (!description) throw new Error("Please enter description");
 
       const selectedUsersLength = Array.from(selectedKeys).length === 1;
 
@@ -250,6 +254,7 @@ export const TableWrapper: FC<Props> = ({
       await axios.post(`/api/users/invoices`, {
         ids: Array.from(selectedKeys),
         seedAmount: value,
+        description,
       });
 
       addActivity({
@@ -267,6 +272,7 @@ export const TableWrapper: FC<Props> = ({
         value: 0,
         isOpen: false,
         isLoading: true,
+        description: "",
       });
       location.reload();
     } catch (error: any) {
@@ -416,6 +422,7 @@ export const TableWrapper: FC<Props> = ({
             value: 0,
             isOpen: false,
             isLoading: false,
+            description: "",
           })
         }
       >
@@ -437,6 +444,26 @@ export const TableWrapper: FC<Props> = ({
                     return {
                       ...prevValue,
                       value,
+                    };
+                  })
+                }
+              />
+              <Textarea
+                variant="bordered"
+                className="w-full"
+                label="Description"
+                labelPlacement="outside"
+                placeholder="Enter your description"
+                disableAutosize
+                classNames={{
+                  base: "w-full",
+                  input: "resize-y min-h-40",
+                }}
+                onChange={({ target: { value } }: any) =>
+                  setSeed((prevValue) => {
+                    return {
+                      ...prevValue,
+                      description: value,
                     };
                   })
                 }

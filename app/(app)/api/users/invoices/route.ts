@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { ids, seedAmount: amount } = await req.json();
+    const { ids, seedAmount: amount, description } = await req.json();
 
-    if (!amount || ids.length === 0) {
+    if (!amount || !description || ids.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         txnId: "ChessFortune",
         status: "new",
         qrcodeUrl: "ChessFortune",
+        description,
       });
     }
 

@@ -43,8 +43,17 @@ export const invoiceColumns = [
 ];
 
 export const paymentColumns = [...invoiceColumns];
+
 export const withdrawlColumns = [
-  ...invoiceColumns,
+  { name: "Amount", uid: "amount" },
+  { name: "User", uid: "user" },
+  { name: "Description", uid: "description" },
+  { name: "Status URL", uid: "statusUrl" },
+  { name: "Seed Amount", uid: "seedAmount" },
+  { name: "Confirmations", uid: "confirmations" },
+  { name: "Currency", uid: "currentCurrency" },
+  { name: "Status", uid: "status" },
+  { name: "Created At", uid: "createdAt" },
   { name: "Actions", uid: "actions" },
 ];
 

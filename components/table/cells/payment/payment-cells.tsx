@@ -46,6 +46,14 @@ const PaymentRenderCells: FC<{
         </div>
       );
 
+    case "description":
+      return (
+        <TooltipWrapper
+          value={cellValue ? cellValue : "No description available"}
+          wordLength={32}
+        />
+      );
+
     case "statusUrl":
     case "seedAmount":
     case "confirmations":
