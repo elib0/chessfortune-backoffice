@@ -72,6 +72,14 @@ export const pages = [
     ],
   },
   {
+    title: "Staffs",
+    pages: [
+      { title: "Staff Management", href: "/staffs" },
+      { title: "Role Management", href: "/staffs/role-management" },
+      { title: "Activity Monitoring", href: "/staffs/activity-monitoring" },
+    ],
+  },
+  {
     title: "Reports",
     pages: [
       { title: "Financial Reports", href: "/reports/financial" },

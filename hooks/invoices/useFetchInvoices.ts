@@ -19,7 +19,14 @@ const useFetchInvoices = () => {
         });
         const { invoices: invoiceData } = await data.json();
 
-        setInvoices(invoiceData);
+        const newInvoiceData = invoiceData.map((item: InvoiceData) => {
+          if (item.checkoutUrl === "stripe") {
+            item.amount = item.amount / 100;
+          }
+          return item;
+        });
+
+        setInvoices(newInvoiceData);
       } catch (error) {
       } finally {
         setLoading(false);

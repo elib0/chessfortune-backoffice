@@ -19,7 +19,14 @@ const useFetchInvoicesByUserId = (userId: string) => {
         });
         const { invoices } = await data.json();
 
-        setUserInvoices(invoices);
+        const newInvoiceData = invoices.map((item: InvoiceData) => {
+          if (item.checkoutUrl === "stripe") {
+            item.amount = item.amount / 100;
+          }
+          return item;
+        });
+
+        setUserInvoices(newInvoiceData);
       } catch (error) {
         console.error("Error fetching user invoices: ", error);
       } finally {
